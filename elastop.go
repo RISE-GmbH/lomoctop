@@ -551,11 +551,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if apiKey == "" && (*user == "" || *password == "") {
-		fmt.Fprintf(os.Stderr, "Error: Must provide either API key or both username and password\n")
-		os.Exit(1)
-	}
-
 	// Strip any trailing slash from the host
 	*host = strings.TrimRight(*host, "/")
 
@@ -619,7 +614,7 @@ func main() {
 			// Set authentication
 			if apiKey != "" {
 				req.Header.Set("Authorization", fmt.Sprintf("ApiKey %s", apiKey))
-			} else {
+			} else if *user != "" && *password != "" {
 				req.SetBasicAuth(*user, *password)
 			}
 
