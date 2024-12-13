@@ -32,12 +32,35 @@ go build
 ```
 
 ### Command Line Flags
-| Flag        | Description            | Default       |
-| ----------- | ---------------------- | ------------- |
-| `-host`     | Elasticsearch host     | `localhost`   |
-| `-port`     | Elasticsearch port     | `9200`        |
-| `-user`     | Elasticsearch username | `elastic`     |
-| `-password` | Elasticsearch password | `ES_PASSWORD` |
+| Flag        | Description                           | Default       |
+| ----------- | ------------------------------------- | ------------- |
+| `-host`     | Elasticsearch host                    | `localhost`   |
+| `-port`     | Elasticsearch port                    | `9200`        |
+| `-user`     | Elasticsearch username                | `elastic`     |
+| `-password` | Elasticsearch password                | `ES_PASSWORD` |
+| `-apikey`   | Elasticsearch API key                 | `ES_API_KEY`  |
+| `-cert`     | Path to client certificate file       |               |
+| `-key`      | Path to client private key file       |               |
+| `-ca`       | Path to CA certificate file           |               |
+| `-insecure` | Skip TLS certificate verification     | `false`       |
+
+Note: Only one authentication method (username/password, API key, or certificates) can be used at a time.
+
+### Authentication Examples
+
+```bash
+# Using username/password
+./elastop -host https://elasticsearch.example.com -user elastic -password secret
+
+# Using API key
+./elastop -host https://elasticsearch.example.com -apikey your_api_key
+
+# Using certificate authentication
+./elastop -host https://elasticsearch.example.com -cert /path/to/client.crt -key /path/to/client.key -ca /path/to/ca.crt
+
+# Using certificate authentication with insecure SSL (not recommended for production)
+./elastop -host https://elasticsearch.example.com -cert /path/to/client.crt -key /path/to/client.key -insecure
+```
 
 ## Dashboard Layout
 

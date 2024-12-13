@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -537,6 +538,13 @@ func main() {
 	user := flag.String("user", os.Getenv("ES_USER"), "Elasticsearch username")
 	password := flag.String("password", os.Getenv("ES_PASSWORD"), "Elasticsearch password")
 	flag.StringVar(&apiKey, "apikey", os.Getenv("ES_API_KEY"), "Elasticsearch API key")
+
+	// Add new certificate-related flags
+	certFile := flag.String("cert", "", "Path to client certificate file")
+	keyFile := flag.String("key", "", "Path to client private key file")
+	caFile := flag.String("ca", "", "Path to CA certificate file")
+	skipVerify := flag.Bool("insecure", false, "Skip TLS certificate verification")
+
 	flag.Parse()
 
 	// Validate and process the host URL
@@ -545,20 +553,65 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Validate authentication
-	if apiKey != "" && (*user != "" || *password != "") {
-		fmt.Fprintf(os.Stderr, "Error: Cannot use both API key and username/password authentication\n")
+	// Validate authentication methods - only one should be used
+	authMethods := 0
+	if apiKey != "" {
+		authMethods++
+	}
+	if *user != "" || *password != "" {
+		authMethods++
+	}
+	if *certFile != "" || *keyFile != "" {
+		authMethods++
+	}
+	if authMethods > 1 {
+		fmt.Fprintf(os.Stderr, "Error: Cannot use multiple authentication methods simultaneously (API key, username/password, or certificates)\n")
+		os.Exit(1)
+	}
+
+	// Validate certificate files if specified
+	if (*certFile != "" && *keyFile == "") || (*certFile == "" && *keyFile != "") {
+		fmt.Fprintf(os.Stderr, "Error: Both certificate and key files must be specified together\n")
 		os.Exit(1)
 	}
 
 	// Strip any trailing slash from the host
 	*host = strings.TrimRight(*host, "/")
 
+	// Create TLS config
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: *skipVerify,
+	}
+
+	// Load client certificates if specified
+	if *certFile != "" && *keyFile != "" {
+		cert, err := tls.LoadX509KeyPair(*certFile, *keyFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error loading client certificates: %v\n", err)
+			os.Exit(1)
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+
+	// Load CA certificate if specified
+	if *caFile != "" {
+		caCert, err := os.ReadFile(*caFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading CA certificate: %v\n", err)
+			os.Exit(1)
+		}
+
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCert) {
+			fmt.Fprintf(os.Stderr, "Error parsing CA certificate\n")
+			os.Exit(1)
+		}
+		tlsConfig.RootCAs = caCertPool
+	}
+
 	// Create custom HTTP client with SSL configuration
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true, // Allow self-signed certificates
-		},
+		TLSClientConfig: tlsConfig,
 	}
 	client := &http.Client{
 		Transport: tr,
