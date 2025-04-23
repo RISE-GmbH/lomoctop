@@ -4,7 +4,9 @@
 *.dll
 *.so
 *.dylib
-elastop
+lomoctop
+*.yml
+*.yaml
 
 # Test binary, built with `go test -c`
 *.test

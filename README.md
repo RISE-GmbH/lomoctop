@@ -1,134 +1,92 @@
-# Elastop - Elasticsearch Terminal Dashboard
+# Lomoctop - OpenSearch/LOMOC Terminal Dashboard
 
-Elastop is a terminal-based dashboard for monitoring Elasticsearch clusters in real-time. It provides a comprehensive view of cluster health, node status, indices, and various performance metrics in an easy-to-read terminal interface. This tool was designed to look visually similar HTOP.
+Extension of https://github.com/acidvegas/elastop.git
 
-![](./.screens/preview.png)
-
-## Features
-
-- Real-time cluster monitoring
-- Node status and resource usage
-- Index statistics and write rates
-- Search and indexing performance metrics
-- Memory usage and garbage collection stats
-- Network and disk I/O monitoring
-- Color-coded health status indicators
-- Role-based node classification
-- Version compatibility checking
+Lomoctop is a terminal-based dashboard for monitoring OpenSearch clusters in real-time. It provides a view of cluster health, node status, indices, and various performance metrics in an easy-to-read terminal interface.
+![Lomoctop View](.screens/image.png)
 
 ## Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/acidvegas/elastop.git
-cd elastop
+cd lomoctop
 go build
 ```
 
 ## Usage
 
 ```bash
-./elastop [flags]
+./lomoctop [flags]
+
+# You may also add an alias to your .bashrc
+echo "alias ltop='~/lomoctop/lomoctop -config ~/lomoctop/config.yml'" >> ~/.bashrc
 ```
 
 ### Command Line Flags
-| Flag        | Description                           | Default       |
-| ----------- | ------------------------------------- | ------------- |
-| `-host`     | Elasticsearch host                    | `localhost`   |
-| `-port`     | Elasticsearch port                    | `9200`        |
-| `-user`     | Elasticsearch username                | `elastic`     |
-| `-password` | Elasticsearch password                | `ES_PASSWORD` |
-| `-apikey`   | Elasticsearch API key                 | `ES_API_KEY`  |
-| `-cert`     | Path to client certificate file       |               |
-| `-key`      | Path to client private key file       |               |
-| `-ca`       | Path to CA certificate file           |               |
-| `-insecure` | Skip TLS certificate verification     | `false`       |
+| Flag        | Description                           |
+| ----------- | ------------------------------------- |
+| `-config`     | Config File                  |
 
-Note: Only one authentication method (username/password, API key, or certificates) can be used at a time.
 
-### Authentication Examples
+
+### Examples
 
 ```bash
-# Using username/password
-./elastop -host https://elasticsearch.example.com -user elastic -password secret
+./lomctop -config config.yml
 
-# Using API key
-./elastop -host https://elasticsearch.example.com -apikey your_api_key
+# or when added the alias
+ltop
 
-# Using certificate authentication
-./elastop -host https://elasticsearch.example.com -cert /path/to/client.crt -key /path/to/client.key -ca /path/to/ca.crt
-
-# Using certificate authentication with insecure SSL (not recommended for production)
-./elastop -host https://elasticsearch.example.com -cert /path/to/client.crt -key /path/to/client.key -insecure
 ```
 
-## Dashboard Layout
+## Configuration
+The `config.yml` file allows you to define one or more OpenSearch clusters to monitor. Below is a description of each configuration field:
 
-### Header Section
-- Displays cluster name and health status
-- Shows total number of nodes (successful/failed)
-- Indicates version compatibility with latest Elasticsearch release
+| Field            | Description |
+|------------------|-------------|
+| `protocol`       | The protocol used to connect to the OpenSearch cluster (typically `http` or `https`). |
+| `hostname`       | The primary hostname of the OpenSearch cluster. |
+| `url`            | A list of useful or related URLs for the cluster (e.g., dashboards, documentation, Grafana instances). These are not used for connection, just for reference. |
+| `port`           | The port number on which the OpenSearch cluster is accessible (default is usually `9200`). |
+| `user`           | The username used for basic authentication. |
+| `password`       | The corresponding password for the user. |
+| `api_key`        | Optional. An API key that can be used instead of user/password for authentication. |
+| `ca_file_path`   | Optional. Path to the CA certificate file if using TLS and verifying server certificates. |
+| `cert_file_path` | Optional. Path to the client certificate file for mutual TLS authentication. |
+| `key_file_path`  | Optional. Path to the private key file for mutual TLS authentication. |
+| `skip_tls_verify`| If set to `true`, TLS certificate verification will be skipped (not recommended for production). Useful for self-signed certs or dev environments. |
 
-### Nodes Panel
-- Lists all nodes with their roles and status
-- Shows real-time resource usage:
-  - CPU utilization
-  - Memory usage
-  - Heap usage
-  - Disk space
-  - Load average
-- Displays node version and OS information
+Each `host` entry represents a distinct OpenSearch cluster configuration. You can monitor multiple clusters by adding multiple entries in the `hosts` list.
 
-### Indices Panel
-- Lists all indices with health status
-- Shows document counts and storage size
-- Displays primary shards and replica configuration
-- Real-time ingestion monitoring with:
-  - Document count changes
-  - Ingestion rates (docs/second)
-  - Active write indicators
 
-### Metrics Panel
-- Search performance:
-  - Query counts and rates
-  - Average query latency
-- Indexing metrics:
-  - Operation counts
-  - Indexing rates
-  - Average indexing latency
-- Memory statistics:
-  - System memory usage
-  - JVM heap utilization
-- GC metrics:
-  - Collection counts
-  - GC timing statistics
-- I/O metrics:
-  - Network traffic (TX/RX)
-  - Disk operations
-  - Open file descriptors
+```yaml
+hosts:
+  - protocol: https
+    hostname: <opensearch-hostname>
+    url:
+      - <link-1>
+      - <link-2>
+    port: 9200
+    user: <username>
+    password: <password>
+    api_key:
+    ca_file_path: 
+    cert_file_path:
+    key_file_path:
+    skip_tls_verify: true
 
-### Role Legend
-Shows all possible node roles with their corresponding colors:
-- M: Master
-- D: Data
-- C: Content
-- H: Hot
-- W: Warm
-- K: Cold
-- F: Frozen
-- I: Ingest
-- L: Machine Learning
-- R: Remote Cluster Client
-- T: Transform
-- V: Voting Only
-- O: Coordinating Only
+  - protocol: https
+    hostname: <opensearch-hostname>
+    url:
+      - <link-1>
+      - <link-2>
+    port: 9200
+    user: <username>
+    password: <password>
+    api_key:
+    ca_file_path: 
+    cert_file_path:
+    key_file_path:
+    skip_tls_verify: true
 
-## Controls
-
-- Press `q` or `ESC` to quit
-- Mouse scrolling supported in all panels
-- Auto-refreshes every 5 seconds
-
----
-
-###### Mirrors: [acid.vegas](https://git.acid.vegas/elastop) • [SuperNETs](https://git.supernets.org/acidvegas/elastop) • [GitHub](https://github.com/acidvegas/elastop) • [GitLab](https://gitlab.com/acidvegas/elastop) • [Codeberg](https://codeberg.org/acidvegas/elastop)
+```

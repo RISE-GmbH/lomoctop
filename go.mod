@@ -1,4 +1,4 @@
-module elastop
+module lomoctop
 
 go 1.23.2
 
